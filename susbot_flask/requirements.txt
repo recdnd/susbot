@@ -1,0 +1,4 @@
+flask
+flask_cors
+requests
+apscheduler==3.10.4

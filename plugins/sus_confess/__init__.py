@@ -16,7 +16,7 @@ def load_confession():
 
 @scheduler.scheduled_job(trigger="cron", day_of_week="fri", hour=23, minute=0, id="sus_confess")
 async def send_confession():
-    bot = get_bots()
+    bot = get_bot()
     lines = load_confession()
     for line in lines:
         await bot.send_group_msg(group_id=GROUP_ID, message=line)
