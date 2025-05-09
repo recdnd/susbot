@@ -1,0 +1,29 @@
+模組名稱：sus_bless
+
+啟用日期：2025/5/9
+排程時間：每週五 07:00（目前測試用 */1）
+模組功能：
+- 根據圖片資料夾分類（food/book/horror）
+- 對應分類選擇祝福語，支援備援池（free）
+- 加入季節性語句開頭，隨機選圖+文訊息發送
+- 使用 apscheduler 自動定時排程
+
+使用資料：
+- data/images/ 內部分類文件（檔名包含關鍵字）
+- data/bless.txt 分類文本（每行以 *free / *book 等開頭）
+
+依賴功能：
+- `nonebot_plugin_apscheduler`
+- `MessageSegment.image`, `get_bots()`
+
+已解決問題：
+- 圖片無法分類 → 使用檔名關鍵字
+- 語句含分類名稱 → 使用 strip + replace 去除
+- 排程不觸發 → 改用 trigger="cron"，避免參數衝突
+
+待優化：
+- 圖片分類改為目錄名自動推斷（目前靠檔名）
+- 圖片使用記錄檔防止當日重複（如 meme 模組）
+
+備註：
+- 可與 sus_meme 統一管理圖片池

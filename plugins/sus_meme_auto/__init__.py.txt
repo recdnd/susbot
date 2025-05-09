@@ -1,0 +1,59 @@
+from nonebot import require, get_bot
+from nonebot.log import logger
+from nonebot_plugin_apscheduler import scheduler
+from datetime import datetime
+from pathlib import Path
+import os
+import random
+from nonebot.adapters.onebot.v11 import MessageSegment
+
+require("nonebot_plugin_apscheduler")
+
+# 配置區
+GROUP_IDS = [333039603, 894772961, 873338015, 656677831]
+MEME_DIR = Path("memes/r_now_meme")  # 可修改路徑
+RECORD_FILE = Path("memes/.sent_meme_record.txt")
+BASE_DATE = datetime(2024, 1, 1)  # 設定週期的基準日
+
+def get_all_images(folder: Path):
+    image_exts = [".png", ".jpg", ".jpeg", ".webp"]
+    result = []
+    for root, _, files in os.walk(folder):
+        for file in files:
+            if any(file.lower().endswith(ext) for ext in image_exts):
+                result.append(Path(root) / file)
+    return result
+
+def load_sent():
+    if RECORD_FILE.exists():
+        return set(RECORD_FILE.read_text(encoding="utf-8").splitlines())
+    return set()
+
+def record_sent(file: Path):
+    with RECORD_FILE.open("a", encoding="utf-8") as f:
+        f.write(str(file.resolve()) + "\n")
+
+@scheduler.scheduled_job("cron", hour=12, minute=0)
+async def scheduled_meme_job():
+    today = datetime.now()
+    if (today.date() - BASE_DATE.date()).days % 3 != 0:
+        return  # 不是三天週期日
+
+    sent_set = load_sent()
+    all_images = get_all_images(MEME_DIR)
+    unsent_images = [img for img in all_images if str(img.resolve()) not in sent_set]
+
+    if not unsent_images:
+        logger.info("✅ 所有 meme 圖片已發送過，未再發送")
+        return
+
+    chosen = random.choice(unsent_images)
+    record_sent(chosen)
+
+    bot = get_bot()
+    for gid in GROUP_IDS:
+        try:
+            await bot.send_group_msg(group_id=gid, message=MessageSegment.image(chosen.as_posix()))
+            logger.info(f"📤 已向群 {gid} 發送 meme：{chosen}")
+        except Exception as e:
+            logger.warning(f"❌ 發送至群 {gid} 失敗: {e}")

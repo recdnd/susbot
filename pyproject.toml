@@ -1,0 +1,8 @@
+[tool.nonebot]
+plugin_dirs = ["plugins"]
+
+adapters = [
+  { name = "OneBot V11", module_name = "nonebot.adapters.onebot.v11" }
+]
+
+plugins = ["nonebot_plugin_apscheduler"]
